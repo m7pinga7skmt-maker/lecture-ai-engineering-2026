@@ -25,12 +25,17 @@ def ask(question: str) -> str:
     client = genai.Client(api_key=get_api_key())
     response = client.models.generate_content(model=MODEL, contents=question)
 
-    usage = response.usage_metadata
+    usage = getattr(response, "usage_metadata", None)
     if usage is not None:
-        print(
-            f"[トークン数] 入力: {usage.prompt_token_count}, "
-            f"出力: {usage.candidates_token_count}"
-        )
+        input_tokens = getattr(usage, "prompt_token_count", None)
+        output_tokens = getattr(usage, "candidates_token_count", None)
+
+        if input_tokens is None:
+            input_tokens = getattr(usage, "input_token_count", "不明")
+        if output_tokens is None:
+            output_tokens = getattr(usage, "output_token_count", "不明")
+
+        print(f"[トークン数] 入力: {input_tokens}, 出力: {output_tokens}")
 
     return response.text
 
